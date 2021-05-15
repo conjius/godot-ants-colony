@@ -1,3 +1,4 @@
+class_name PathingQueue
 extends Node2D
 
 onready var queue : Array = []

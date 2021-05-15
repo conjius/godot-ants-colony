@@ -8,24 +8,76 @@
 
 config_version=4
 
-_global_script_classes=[  ]
+_global_script_classes=[ {
+"base": "Node2D",
+"class": "Ant",
+"language": "GDScript",
+"path": "res://scripts/Ant.gd"
+}, {
+"base": "KinematicBody2D",
+"class": "AntKinematicBody2D",
+"language": "GDScript",
+"path": "res://scripts/AntKinematicBody2D.gd"
+}, {
+"base": "Node",
+"class": "AntManager",
+"language": "GDScript",
+"path": "res://scripts/AntManager.gd"
+}, {
+"base": "Control",
+"class": "InputManager",
+"language": "GDScript",
+"path": "res://scripts/InputManager.gd"
+}, {
+"base": "Node2D",
+"class": "PathingQueue",
+"language": "GDScript",
+"path": "res://scripts/PathingQueue.gd"
+}, {
+"base": "Node2D",
+"class": "Task",
+"language": "GDScript",
+"path": "res://scripts/Task.gd"
+}, {
+"base": "Node",
+"class": "TaskManager",
+"language": "GDScript",
+"path": "res://scripts/TaskManager.gd"
+}, {
+"base": "Camera2D",
+"class": "WorldCamera",
+"language": "GDScript",
+"path": "res://scripts/WorldCamera.gd"
+}, {
+"base": "Node2D",
+"class": "WorldMap",
+"language": "GDScript",
+"path": "res://scripts/WorldMap.gd"
+} ]
 _global_script_class_icons={
-
+"Ant": "",
+"AntKinematicBody2D": "",
+"AntManager": "",
+"InputManager": "",
+"PathingQueue": "",
+"Task": "",
+"TaskManager": "",
+"WorldCamera": "",
+"WorldMap": ""
 }
 
 [application]
 
 config/name="godot-ants-colony"
-run/main_scene="res://scenes/above.tscn"
-config/icon="res://icon.png"
+run/main_scene="res://scenes/AboveGround.tscn"
 
 [display]
 
 window/size/width=1920
 window/size/height=1080
 window/size/resizable=false
-window/stretch/mode="viewport"
-window/stretch/aspect="keep"
+window/stretch/mode="2d"
+window/stretch/aspect="expand"
 
 [rendering]
 
