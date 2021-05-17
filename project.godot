@@ -75,7 +75,8 @@ run/main_scene="res://scenes/AboveGround.tscn"
 
 window/size/width=1920
 window/size/height=1080
-window/size/resizable=false
+window/size/test_width=1920
+window/size/test_height=1080
 window/stretch/mode="2d"
 window/stretch/aspect="expand"
 

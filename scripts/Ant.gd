@@ -4,19 +4,33 @@ class_name Ant
 const TaskType = preload("res://scripts/common/TaskType.gd")
 
 enum AnimationState { IDLE, WALK }
-const ANIMATION_STATE_NAMES = ["idle", "walk"]
-enum MovementDirection {RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT, LEFT, UP_LEFT, UP, UP_RIGHT}
+enum MovementDirection {RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT, LEFT, UP_LEFT, UP, UP_RIGHT, IDLE}
+
+onready var movement_vectors = [
+	Vector2(1, 0),					# right
+	Vector2(1,1).normalized(),		# down right
+	Vector2(0, 1),					# down
+	Vector2(-1,1).normalized(),		# down left
+	Vector2(-1, 0),					# left
+	Vector2(-1, -1).normalized(),	# up left
+	Vector2(0, -1),					# up
+	Vector2(1, -1).normalized(),	# up right
+	Vector2.ZERO,					# idle
+]
 onready var MovementDirectionToUnitVector = {
-	MovementDirection.RIGHT: Vector2(1, 0), 
-	MovementDirection.DOWN_RIGHT: Vector2(1,1).normalized(), 
-	MovementDirection.DOWN: Vector2(0, 1), 
-	MovementDirection.DOWN_LEFT: Vector2(-1,1).normalized(), 
-	MovementDirection.LEFT: Vector2(-1, 0), 
-	MovementDirection.UP_LEFT: Vector2(-1, -1).normalized(), 
-	MovementDirection.UP: Vector2(0, -1), 
-	MovementDirection.UP_RIGHT: Vector2(1, -1).normalized()
+	MovementDirection.RIGHT: movement_vectors[0], 
+	MovementDirection.DOWN_RIGHT: movement_vectors[1], 
+	MovementDirection.DOWN: movement_vectors[2], 
+	MovementDirection.DOWN_LEFT: movement_vectors[3], 
+	MovementDirection.LEFT: movement_vectors[4], 
+	MovementDirection.UP_LEFT: movement_vectors[5], 
+	MovementDirection.UP: movement_vectors[6], 
+	MovementDirection.UP_RIGHT: movement_vectors[7],
+	MovementDirection.IDLE: movement_vectors[8],
 }
 const MOVEMENT_DIRECTION_NAMES = ["right", "down_right", "down", "down_left", "left", "up_left", "up", "up_right"]
+const ANIMATION_STATE_NAMES = ["idle", "walk"]
+const MIN_FRAMES_SINCE_LAST_DIRECTION_CHANGE = 60
 
 onready var animated_sprite = $AntKinematicBody2D/AntAnimatedSprite
 onready var kinematic_body_2d = $AntKinematicBody2D
@@ -27,6 +41,7 @@ onready var world_map = $"/root/Root/WorldMap"
 onready var ant_id
 onready var current_task : Task setget set_current_task, get_current_task 
 onready var facing_direction = MovementDirection.DOWN
+onready var frames_since_last_direction_change = 0
 
 func init(new_ant_id: int, initial_task: Task, initial_position: Vector2) -> Ant:
 	self.ant_id = new_ant_id
@@ -38,14 +53,13 @@ func _ready():
 	animate(AnimationState.IDLE)
 
 func animate(animation_state):
-	facing_direction = direction_to_movement_direction(kinematic_body_2d.velocity)
 	var frame_num = animated_sprite.frame
 	animated_sprite.play(MOVEMENT_DIRECTION_NAMES[facing_direction] + "_" + ANIMATION_STATE_NAMES[animation_state])
 	animated_sprite.frame = frame_num
   
 func _process(delta):
 	check_current_task_completion()
-	var movement_vector = choose_movement_vector()
+	var movement_vector = update_movement_vector()
 	if movement_vector == Vector2.ZERO:
 		animate(AnimationState.IDLE)
 		kinematic_body_2d.stop(delta)
@@ -63,49 +77,63 @@ func is_current_task_completed() -> bool:
 		TaskType.EXPLORE: return world_map.are_two_positions_in_same_tile(kinematic_body_2d.position, current_task.position)
 		_: return false
 
-func choose_movement_vector():
+func update_movement_vector():
 	var movement_vector
 	match current_task.get_task_type():
 		TaskType.NO_TASK:
-			var movement_direction = choose_random_direction() if should_change_direction() else facing_direction
-			movement_vector = MovementDirectionToUnitVector[movement_direction]
+			movement_vector = choose_random_movement_vector() if should_change_direction() else MovementDirectionToUnitVector[facing_direction]
 		TaskType.EXPLORE:
-			movement_vector = get_desired_movement_vector()
+			movement_vector = determine_explore_movement_vector() if should_change_direction() else MovementDirectionToUnitVector[facing_direction]
 		_: print("Unsupported TaskType value for ant_id [%s]" % ant_id)
+	facing_direction = snapped_movement_vector_to_movement_direction(movement_vector)
 	# due to isometry, vertical movement is twice as slow
 	movement_vector.y /= 2
 	return movement_vector
 
-func choose_random_direction():
-	return MovementDirection.values()[randi() % MovementDirectionToUnitVector.size()]
-	
-func get_desired_movement_vector():
-	var raw_direction: Vector2 = current_task.position - kinematic_body_2d.position
-	return snap_to_8_way_dir(raw_direction)
+func choose_random_movement_vector():
+	var random_movement_direction = MovementDirection.values()[randi() % (MovementDirection.size() - 1)]
+	return MovementDirectionToUnitVector[random_movement_direction]
 
-func snap_to_8_way_dir(vector: Vector2) -> Vector2:
+func determine_explore_movement_vector() -> Vector2:
+	var raw_direction: Vector2 = current_task.position - kinematic_body_2d.position
+	var snapped_direction = snap_to_8_way_direction(raw_direction)
+	return snapped_direction
+
+func snapped_movement_vector_to_movement_direction(snapped_movement_vector: Vector2):
+	var snapped_angle = normalize_vector_angle(snapped_movement_vector)
+	var index = stepify(snapped_angle, PI / 4) / (PI / 4)
+	return MovementDirection.values()[index]
+
+func snap_to_8_way_direction(vector: Vector2) -> Vector2:
+	var snapped_angle: float = stepify(normalize_vector_angle(vector), PI / 4) # snap to multiples of PI/4 radians (45 degrees)
+	var snapped_vector = Vector2.RIGHT.rotated(snapped_angle)
+	if abs(snapped_vector.x) == snapped_vector.x:
+		snapped_vector.x = 0
+	if abs(snapped_vector.y) == snapped_vector.y:
+		snapped_vector.y = 0
+	
+	return snapped_vector
+
+func normalize_vector_angle(vector: Vector2) -> float:
 	var angle: float = fmod(vector.angle(), 2 * PI) # ignore complete turns around the origin
-	var snapped_angle: float = stepify(angle, PI / 4) # snap to multiples of PI/4 radians (45 degrees)
-	return Vector2.RIGHT.rotated(snapped_angle)
+	if angle < 0:
+		angle += 2 * PI		# treat negative angles as positive
+	return angle
 
 func should_change_direction():
-	# adding multiples of an option increases its chance of being randomly selected
+	if frames_since_last_direction_change < MIN_FRAMES_SINCE_LAST_DIRECTION_CHANGE:
+		frames_since_last_direction_change += 1
+		return false
+
 	var options = [
 		true, 
-		false, 
+		false,
 		false,
 		false
 	]
-	return options[randi() % options.size()]
-
-func direction_to_movement_direction(direction : Vector2):
-	if direction == Vector2.ZERO:
-		return facing_direction
-	var angle = direction.angle()
-	if angle < 0:
-		angle += 2 * PI
-	var index = int(round(angle / PI * 4)) % 8
-	return index
+	var should_change = options[randi() % options.size()]
+	frames_since_last_direction_change = 0 if should_change else frames_since_last_direction_change + 1
+	return should_change
 
 func set_current_task(task: Task):
 	current_task = task

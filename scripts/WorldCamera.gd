@@ -5,7 +5,7 @@ const MAP_SCROLLING_SPEED = 1500
 const SCREEN_EDGE_SCROLL_PADDING = 5
 const ZOOM_SPEED = 0.03
 const MIN_ZOOM = 0.4
-const MAX_ZOOM = 0.8
+const MAX_ZOOM = 1
 
 onready var mouse_position
 onready var scrolling_direction = Vector2(0,0)

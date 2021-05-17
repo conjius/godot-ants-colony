@@ -4,10 +4,10 @@ extends Node
 onready var ant_scene = preload("res://scenes/Ant.tscn")
 
 const NUM_ANTS_TO_SPAWN = 3
-const ANT_SPAWN_MIN_X = 0
-const ANT_SPAWN_MAX_X = 0
-const ANT_SPAWN_MIN_Y = 0
-const ANT_SPAWN_MAX_Y = 0
+const ANT_SPAWN_MIN_X = -100
+const ANT_SPAWN_MAX_X = 100
+const ANT_SPAWN_MIN_Y = -100
+const ANT_SPAWN_MAX_Y = 100
 
 onready var task_manager = $"../TaskManager"
 onready var world_map = $"../WorldMap"

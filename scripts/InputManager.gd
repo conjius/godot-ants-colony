@@ -28,12 +28,12 @@ func _input(event):
 				world_camera.zoom_in()
 			BUTTON_WHEEL_DOWN:
 				world_camera.zoom_out()
-			BUTTON_RIGHT: 
+			BUTTON_MIDDLE: 
 				world_camera.handle_panning_input(event.is_pressed(), get_global_mouse_position())
-			BUTTON_LEFT:
-				if event.is_pressed(): handle_left_mouse_click(event.is_pressed(), get_global_mouse_position())
+			BUTTON_RIGHT:
+				if event.is_pressed(): handle_right_mouse_click(event.is_pressed(), get_global_mouse_position())
 
-func handle_left_mouse_click(is_pressed: bool, mouse_position: Vector2):
+func handle_right_mouse_click(is_pressed: bool, mouse_position: Vector2):
 	var tile_coordinates = world_map.world_position_to_tile_coordinates(mouse_position)
 	if is_pressed and world_map.is_tile_interactable(tile_coordinates):
 		var task_world_position = world_map.tile_coordinates_to_world_position(tile_coordinates)
