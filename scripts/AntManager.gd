@@ -3,7 +3,7 @@ extends Node
 
 onready var ant_scene = preload("res://scenes/Ant.tscn")
 
-const NUM_ANTS_TO_SPAWN = 3
+const NUM_ANTS_TO_SPAWN = 1
 const ANT_SPAWN_MIN_X = -100
 const ANT_SPAWN_MAX_X = 100
 const ANT_SPAWN_MIN_Y = -100
@@ -32,13 +32,13 @@ func are_there_idle_ants() -> bool:
 
 func get_random_idle_ant_id() -> int:
 	return idle_ants.keys()[randi() % idle_ants.size()]
-	
+
 func assign_task_to_ant(ant_id: int, task: Task):
 	var ant: Ant = idle_ants[ant_id]
 	ant.set_current_task(task)
 	busy_ants[ant_id] = ant
 	idle_ants.erase(ant_id)
-	
+
 func handle_task_completion(completing_ant_id: int):
 	var completing_ant: Ant = busy_ants[completing_ant_id]
 	var completed_task_tile_coordinates = world_map.world_position_to_tile_coordinates(completing_ant.get_current_task().position)

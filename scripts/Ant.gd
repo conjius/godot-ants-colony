@@ -40,6 +40,7 @@ onready var world_map = $"/root/Root/WorldMap"
 
 onready var ant_id
 onready var current_task : Task setget set_current_task, get_current_task 
+onready var is_foraging = false
 onready var facing_direction = MovementDirection.DOWN
 onready var frames_since_last_direction_change = 0
 
@@ -58,7 +59,7 @@ func animate(animation_state):
 	animated_sprite.frame = frame_num
   
 func _process(delta):
-	check_current_task_completion()
+	update_current_task_status()
 	var movement_vector = update_movement_vector()
 	if movement_vector == Vector2.ZERO:
 		animate(AnimationState.IDLE)
@@ -67,7 +68,7 @@ func _process(delta):
 		animate(AnimationState.WALK)
 		kinematic_body_2d.walk(movement_vector, delta)
 
-func check_current_task_completion():
+func update_current_task_status():
 	if is_current_task_completed():
 		ant_manager.handle_task_completion(ant_id)
 
@@ -84,6 +85,8 @@ func update_movement_vector():
 			movement_vector = choose_random_movement_vector() if should_change_direction() else MovementDirectionToUnitVector[facing_direction]
 		TaskType.EXPLORE:
 			movement_vector = determine_explore_movement_vector() if should_change_direction() else MovementDirectionToUnitVector[facing_direction]
+		TaskType.FORAGE:
+			movement_vector = determine_forage_movement_vector() if should_change_direction() else MovementDirectionToUnitVector[facing_direction]
 		_: print("Unsupported TaskType value for ant_id [%s]" % ant_id)
 	facing_direction = snapped_movement_vector_to_movement_direction(movement_vector)
 	# due to isometry, vertical movement is twice as slow
@@ -98,6 +101,12 @@ func determine_explore_movement_vector() -> Vector2:
 	var raw_direction: Vector2 = current_task.position - kinematic_body_2d.position
 	var snapped_direction = snap_to_8_way_direction(raw_direction)
 	return snapped_direction
+
+func determine_forage_movement_vector() -> Vector2:
+	if is_foraging:
+		return Vector2.ZERO
+	else:
+		return determine_explore_movement_vector()
 
 func snapped_movement_vector_to_movement_direction(snapped_movement_vector: Vector2):
 	var snapped_angle = normalize_vector_angle(snapped_movement_vector)

@@ -17,7 +17,7 @@ func add_task(position, task_type: int) -> int:
 	return task_id_count
 
 func _process(_delta):
-	if unassigned_tasks.size() > 0 && ant_manager.are_there_idle_ants():
+	if unassigned_tasks.size() > 0 and ant_manager.are_there_idle_ants():
 		var idle_ant_id = ant_manager.get_random_idle_ant_id()
 		var random_task_id_to_assign =  unassigned_tasks.keys()[randi() % unassigned_tasks.size()]
 		ant_manager.assign_task_to_ant(idle_ant_id, unassigned_tasks[random_task_id_to_assign])

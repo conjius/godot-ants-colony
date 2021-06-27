@@ -25,13 +25,13 @@ func _input(event):
 	if event is InputEventMouseButton:
 		match event.button_index:
 			BUTTON_WHEEL_UP:
-				world_camera.zoom_in()
+				world_camera.zoom_in_towards_mouse_position(get_global_mouse_position())
 			BUTTON_WHEEL_DOWN:
 				world_camera.zoom_out()
 			BUTTON_MIDDLE: 
 				world_camera.handle_panning_input(event.is_pressed(), get_global_mouse_position())
 			BUTTON_RIGHT:
-				if event.is_pressed(): handle_right_mouse_click(event.is_pressed(), get_global_mouse_position())
+				handle_right_mouse_click(event.is_pressed(), get_global_mouse_position())
 
 func handle_right_mouse_click(is_pressed: bool, mouse_position: Vector2):
 	var tile_coordinates = world_map.world_position_to_tile_coordinates(mouse_position)

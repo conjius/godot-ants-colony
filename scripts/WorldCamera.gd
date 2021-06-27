@@ -1,11 +1,14 @@
 class_name WorldCamera
 extends Camera2D
 
+const Utils = preload("res://scripts/common/Utils.gd")
+
 const MAP_SCROLLING_SPEED = 1500
 const SCREEN_EDGE_SCROLL_PADDING = 5
-const ZOOM_SPEED = 0.03
+const ZOOM_SPEED = 0.02
+const ZOOM_PAN_SPEED = 0.05
 const MIN_ZOOM = 0.4
-const MAX_ZOOM = 1
+const MAX_ZOOM = 1.2
 
 onready var mouse_position
 onready var scrolling_direction = Vector2(0,0)
@@ -51,19 +54,22 @@ func screen_edge_scroll_map(delta: float):
 		scrolling_direction = Vector2.ZERO
 		is_scrolling = false
 
-func zoom_in():
-	zoom -= Vector2(ZOOM_SPEED, ZOOM_SPEED)
+func zoom_in_towards_mouse_position(mouse_position: Vector2):
+	self.zoom -= Vector2(ZOOM_SPEED, ZOOM_SPEED)
 	limit_zoom()
+	if !is_fully_zoomed_in(): self.position += (mouse_position - self.position) * ZOOM_PAN_SPEED * self.zoom
 
 func zoom_out():
-	zoom += Vector2(ZOOM_SPEED, ZOOM_SPEED)
+	self.zoom += Vector2(ZOOM_SPEED, ZOOM_SPEED)
 	limit_zoom()
 
 func limit_zoom():
-	zoom.x = clamp(zoom.x, MIN_ZOOM, MAX_ZOOM)
-	zoom.y = clamp(zoom.y, MIN_ZOOM, MAX_ZOOM)
-	
+	self.zoom.x = clamp(self.zoom.x, MIN_ZOOM, MAX_ZOOM)
+	self.zoom.y = clamp(self.zoom.y, MIN_ZOOM, MAX_ZOOM)
+
+func is_fully_zoomed_in() -> bool:
+	return Utils.compare_floats(self.zoom.x, MIN_ZOOM) and Utils.compare_floats(self.zoom.y, MIN_ZOOM)
+
 func handle_panning_input(is_starting_to_pan: bool, event_mouse_position: Vector2):
 	is_panning = is_starting_to_pan
 	pan_start_location = event_mouse_position
-	

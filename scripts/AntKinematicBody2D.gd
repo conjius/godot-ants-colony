@@ -2,7 +2,7 @@ class_name AntKinematicBody2D
 extends KinematicBody2D
 
 const ACCELERATION = 1000
-const MAX_SPEED = 50
+const MAX_SPEED = 60
 const FRICTION = 1000
 
 onready var velocity = Vector2.ZERO
